@@ -15,26 +15,6 @@ class AIPlatform(BaseModel):
     pricing: str
     website: str
 
-# platforms_db = [
-#     AIPlatform(
-#         id=1,
-#         name="ChatGPT",
-#         category="LLM",
-#         description="Large language model by OpenAI",
-#         pricing="Free / Plus subscription",
-#         website="https://chat.openai.com/"
-#     ),
-#     AIPlatform(
-#         id=2,
-#         name="Claude",
-#         category="LLM",
-#         description="Conversational AI by Anthropic",
-#         pricing="Free / Pro subscription",
-#         website="https://claude.ai/"
-#     )
-# ]
-
-# Dependency to get DB session
 
 def get_db():
     db = SessionLocal()
