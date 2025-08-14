@@ -24,7 +24,7 @@ class Tool(Base):
     description = Column(Text, nullable= False)
     category = Column(String(100), nullable= False)
     pricing = Column(String(100), nullable= True)
-    webstie = Column(String(255), nullable= False)
+    website = Column(String(255), nullable= False)
 
     workflow_steps = relationship("WorkflowStep", back_populates="tool")
 
