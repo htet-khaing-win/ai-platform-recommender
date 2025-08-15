@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class PlatformBase(BaseModel):
     name: str
@@ -21,3 +21,35 @@ class PlatformOut(PlatformBase):
     
     class Config:
         from_attributes = True
+
+#----Request Model-------
+
+class WorkflowRequest(BaseModel):
+     goal: str
+
+
+class ToolResponse(BaseModel):
+     name: str
+     description: Optional [str] = None
+     website: Optional [str] = None
+
+     class Config:
+         orm_mode = True
+
+class WorkflowStepResponse(BaseModel):
+    step_number: int
+    action_description: str
+    tool: ToolResponse
+
+    class Config:
+        orm_mode = True
+
+class WorkflowResponse(BaseModel):
+    workflow_id: int
+    name: str
+    description: Optional [str] = None
+    steps: List[WorkflowStepResponse]
+
+    class Config:
+        orm_mode = True
+
