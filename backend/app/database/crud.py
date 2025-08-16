@@ -34,3 +34,33 @@ def delete_platform(db: Session, platform_id: int):
         db.delete(db_platform)
         db.commit()
     return db_platform
+
+#------------Tool---------------------
+
+def create_tool(db: Session, tool:schemas.ToolCreate):
+    db_tool = models.Tool(models.app.tool.dict())
+    db.add(db_tool)
+    db.commit()
+    db.refresh(db_tool)
+    return db_tool
+
+def get_tool(db: Session, skip : int = 0, limit = 10):
+    return db.query(models.Tool).offset(skip).limit(limit).all()
+
+def update_tool(db: Session, tool_id: int, tool: schemas.ToolUpdate):
+    db_tool = db.query(models.Tool).filter(models.Tool.id == tool_id).first()
+    if not db_tool:
+        return None
+    for key, value in tool.dict(exclude_unset= True).items():
+        setattr(db_tool, key,value)
+    db.commit()
+    db.refresh(db_tool)
+    return db_tool
+
+def delete_tool(db: Session, tool_id: int):
+    db_tool = db.query(models.Tool).filter(models.Tool.id == tool_id).first()
+    if not db_tool:
+        return None
+    db.delete(db_tool)
+    db.commit()
+    return db_tool
