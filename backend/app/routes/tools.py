@@ -3,6 +3,17 @@ from sqlalchemy.orm import Session
 from ..database import crud, schemas
 from ..database import SessionLocal
 
+
+router = APIRouter(prefix="/v1/tools", tags=["Tools"])
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 #-------------Routes for Tool------------------
 @router.post("/", response_model=schemas.ToolResponse)
 def create_tool(tool: schemas.ToolCreate, db: Session = Depends(get_db)):

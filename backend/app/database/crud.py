@@ -38,16 +38,19 @@ def delete_platform(db: Session, platform_id: int):
 #------------Tool---------------------
 
 def create_tool(db: Session, tool:schemas.ToolCreate):
-    db_tool = models.Tool(models.app.tool.dict())
+    db_tool = models.Tool(**tool.dict())
     db.add(db_tool)
     db.commit()
     db.refresh(db_tool)
     return db_tool
 
-def get_tool(db: Session, skip : int = 0, limit = 10):
+def get_tool(db: Session, tool_id: int):  #Specific Tools
+    return db.query(models.Tool).filter(models.Tool.id == tool_id).first()
+
+def get_tools(db: Session, skip: int = 0, limit: int = 100):  # All tools
     return db.query(models.Tool).offset(skip).limit(limit).all()
 
-def update_tool(db: Session, tool_id: int, tool: schemas.ToolUpdate):
+def update_tool(db: Session, tool_id: int, tool: schemas.ToolUpdate): # Tool Update
     db_tool = db.query(models.Tool).filter(models.Tool.id == tool_id).first()
     if not db_tool:
         return None
@@ -57,10 +60,11 @@ def update_tool(db: Session, tool_id: int, tool: schemas.ToolUpdate):
     db.refresh(db_tool)
     return db_tool
 
-def delete_tool(db: Session, tool_id: int):
+def delete_tool(db: Session, tool_id: int): # Tool Delete
     db_tool = db.query(models.Tool).filter(models.Tool.id == tool_id).first()
     if not db_tool:
         return None
     db.delete(db_tool)
     db.commit()
     return db_tool
+
