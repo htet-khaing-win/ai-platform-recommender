@@ -1,10 +1,10 @@
 
 
 from fastapi import FastAPI
-from .routes import platforms
+from .routes import platforms, tools
 
 
-app = FastAPI()
+app = FastAPI(title="AI Platform Recommender")
 
 @app.get("/")
 def read_root():
@@ -14,4 +14,5 @@ def read_root():
 def ping():
     return {"message": "You just got pinged"}
 
-app.include_router(platforms.router)
+app.include_router(platforms.router) #register platform
+app.include_router(tools.router) #register tool
