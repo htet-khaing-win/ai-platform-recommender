@@ -1,4 +1,4 @@
-from . import Sessionlocal, initdb
+from . import SessionLocal, initdb
 from . import crud, schemas
 
 #create tables
@@ -7,7 +7,7 @@ initdb()
 
 #Open session
 
-db = Sessionlocal()
+db = SessionLocal()
 
 #create
 
