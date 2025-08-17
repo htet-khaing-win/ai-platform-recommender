@@ -80,3 +80,23 @@ class ToolResponse(ToolBase):
         from_attributes = True
     
 
+#-------Workflow------------
+
+class WorkflowBase(BaseModel):
+    name: str
+    description: str
+    trigger_keywords: str
+
+class WorkflowCreate(WorkflowBase):
+    pass
+
+class WorkflowUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    trigger_keywords: Optional[List[str]] = None
+
+class WorkflowResponse(WorkflowBase):
+    id: int
+
+    class Config:
+        from_attributes = True
