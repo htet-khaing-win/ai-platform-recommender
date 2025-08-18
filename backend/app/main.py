@@ -1,7 +1,7 @@
 
 
 from fastapi import FastAPI
-from .routes import platforms, tools
+from .routes import platforms, tools, workflows
 
 
 app = FastAPI(title="AI Platform Recommender")
@@ -16,3 +16,4 @@ def ping():
 
 app.include_router(platforms.router) #register platform
 app.include_router(tools.router) #register tool
+app.include_router(workflows.router) #register workflows

@@ -44,7 +44,7 @@ class WorkflowStep(Base):
 
     id = Column(Integer, primary_key= True, index= True)
     workflow_id = Column(Integer, ForeignKey("workflows.id"), nullable= False)
-    step_number = Column(Integer, nullable= False)
+    step_number = Column(Integer, nullable = False)
     tool_id = Column(Integer, ForeignKey("tools.id"), nullable= False)
     action_description = Column(Text, nullable= False)
 

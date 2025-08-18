@@ -73,7 +73,7 @@ def delete_tool(db: Session, tool_id: int): # Tool Delete
 def create_workflow(db: Session, workflow: schemas.WorkflowCreate):
     db_workflow = models.Workflow(**workflow.dict())
     db.add(db_workflow)
-    db.commit
+    db.commit()
     db.refresh(db_workflow)
     return db_workflow
 
@@ -85,7 +85,19 @@ def get_workflows(db: Session, skip: int=0, limit: int= 10):
 
 def update_workflow(db: Session, workflow_id: int, workflow: schemas.WorkflowUpdate):
     db_workflow = db.query(models.Workflow).filter(models.Workflow.id == workflow_id).first()
+    if not db_workflow:
+        return None
+    
+    for key, value in workflow.dict(exclude_unset=True).items():
+        setattr(db_workflow, key, value)
+    
+    db.commit()
+    db.refresh(db_workflow)
+    return db_workflow
 
+def delete_workflow(db: Session, workflow_id: int):
+    
+    db_workflow = db.query(models.Workflow).filter(models.Workflow.id == workflow_id).first()
     if not db_workflow:
         return None
     db.delete(db_workflow)
