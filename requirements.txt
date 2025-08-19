@@ -2,3 +2,6 @@ fastapi
 uvicorn
 pydantic
 nginx
+psycopg2-binary
+asyncpg
+
