@@ -2,7 +2,10 @@
 
 from fastapi import FastAPI
 from .routes import platforms, tools, workflows
+from .database.models import Base
+from .database import engine
 
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="AI Platform Recommender")
 

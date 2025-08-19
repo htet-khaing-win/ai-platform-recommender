@@ -1,8 +1,9 @@
 #database/models.py
 
 from sqlalchemy import Column, Integer, String, Text, ForeignKey
-from sqlalchemy.orm import relationship
-from . import Base #import Base from __init__
+from sqlalchemy.orm import relationship, declarative_base
+
+Base = declarative_base() #Created Base to use everywhere
 
 class AIPlatform(Base):
     __tablename__ = "ai_platforms"

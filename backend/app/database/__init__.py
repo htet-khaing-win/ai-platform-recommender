@@ -3,6 +3,8 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from dotenv import load_dotenv
+from .models import Base
 
 # Use absolute path - place database in the project root  
 # Navigate from database/__init__.py to project root
@@ -13,20 +15,29 @@ backend_dir = os.path.dirname(app_dir)        # .../backend
 project_root = os.path.dirname(backend_dir)   # .../ai-platform-recommender
 
 DATABASE_PATH = os.path.join(project_root, "ai_platforms.db")
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
+# DATABASE_URL = f"sqlite:///{DATABASE_PATH}"  Old (SQLite)
+
+
+load_dotenv()  # Load environment variables from .env
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required")
 
 print(f"Database location: {DATABASE_PATH}")
 
 # Create engine
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+engine = create_engine(DATABASE_URL)  # ✅ Clean PostgreSQL connection
+# engine = create_engine(
+#     DATABASE_URL, connect_args={"check_same_thread": False}
+# )
 
 # SessionLocal class for DB sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # defining Base
-Base = declarative_base()
+# Base = declarative_base()
+
 
 # Create tables in the Database
 def initdb():
