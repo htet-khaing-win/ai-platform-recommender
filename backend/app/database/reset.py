@@ -1,5 +1,5 @@
-import SessionLocal, engine
-from models import Base
+from . import SessionLocal, engine
+from .models import Base
 
 def reset_db():
     Base.metadata.drop_all(bind=engine)
