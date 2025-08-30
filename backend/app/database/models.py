@@ -1,7 +1,8 @@
 #database/models.py
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
 from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.sql import func
 
 Base = declarative_base() #Created Base to use everywhere
 
@@ -29,6 +30,11 @@ class Tool(Base):
 
     workflow_steps = relationship("WorkflowStep", back_populates="tool")
 
+    #Metadata fields
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
 class Workflow(Base):
 
     __tablename__ = "workflows"
@@ -39,6 +45,11 @@ class Workflow(Base):
     trigger_keywords = Column(Text, nullable= False)
     
     steps = relationship("WorkflowStep", back_populates="workflow")
+
+    #Metadata fields
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 class WorkflowStep(Base):
     __tablename__ = "workflow_steps"
@@ -51,3 +62,8 @@ class WorkflowStep(Base):
 
     workflow = relationship("Workflow", back_populates="steps")
     tool = relationship("Tool", back_populates= "workflow_steps")
+
+    #Metadata fields
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
