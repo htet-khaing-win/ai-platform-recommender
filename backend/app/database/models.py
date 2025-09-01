@@ -1,6 +1,6 @@
 #database/models.py
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.sql import func
 
@@ -35,6 +35,13 @@ class Tool(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    #Constraints
+
+    __table_args__ = (
+        UniqueConstraint("name", name = "uq_tool_name"),
+        CheckConstraint("char_length(name) > 2", name="check_tool_name_length")  #at least 3 char
+    )
+
 class Workflow(Base):
 
     __tablename__ = "workflows"
@@ -50,6 +57,12 @@ class Workflow(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    #Constraints
+
+    __table_args__ = (
+        CheckConstraint("char_length(description) > 10", name="check_workflow_description_length"),
+    )
 
 class WorkflowStep(Base):
     __tablename__ = "workflow_steps"
