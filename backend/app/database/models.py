@@ -38,7 +38,6 @@ class Tool(Base):
     #Constraints
 
     __table_args__ = (
-        UniqueConstraint("name", name = "uq_tool_name"),
         CheckConstraint("char_length(name) > 2", name="check_tool_name_length")  #at least 3 char
     )
 
