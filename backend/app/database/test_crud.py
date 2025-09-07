@@ -1,38 +1,40 @@
-from . import SessionLocal, initdb
-from . import crud, schemas
+# # backend/app/database/test_crud.py
+# import pytest
+# from ..database import AsyncSessionLocal
+# from .backend.app import crud, schemas
 
-#create tables
+# #create tables
 
-initdb()
+# initdb()
 
-#Open session
+# #Open session
 
-db = SessionLocal()
+# db = SessionLocal()
 
-#create
+# #create
 
-platform_data = schemas.PlatformCreate(
-    name = "Grok",
-    description = "This is for the test description",
-    category = "Chatbot",
-    website = "https://grok.com/"
-)
+# platform_data = schemas.PlatformCreate(
+#     name = "Grok",
+#     description = "This is for the test description",
+#     category = "Chatbot",
+#     website = "https://grok.com/"
+# )
 
-new_platform = crud.create_platform(db, platform_data)
-print(f"Created: {new_platform}")
+# new_platform = crud.create_platform(db, platform_data)
+# print(f"Created: {new_platform}")
 
-#read
+# #read
 
-all_platforms = crud.get_platforms(db)
-print("here are all platforms:", all_platforms)
+# all_platforms = crud.get_platforms(db)
+# print("here are all platforms:", all_platforms)
 
-#update
+# #update
 
-update_data = schemas.PlatformUpdate(description="Description just got updated")
-updated_platform = crud.update_platform(db, new_platform.id, update_data)
-print("Successfuly Updated:", updated_platform)
+# update_data = schemas.PlatformUpdate(description="Description just got updated")
+# updated_platform = crud.update_platform(db, new_platform.id, update_data)
+# print("Successfuly Updated:", updated_platform)
 
-#delete
+# #delete
 
-deleted = crud.delete_platform(db, new_platform.id)
-print("Successfully Deleted", deleted)
+# deleted = crud.delete_platform(db, new_platform.id)
+# print("Successfully Deleted", deleted)

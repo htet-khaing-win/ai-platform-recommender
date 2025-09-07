@@ -1,64 +1,45 @@
-#database/__init__.py
-
+# backend/app/database/__init__.py
 import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
 from dotenv import load_dotenv
-from .models import Base, Tool
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from fastapi import Depends
-from sqlalchemy import select
 
-# Load environment variables first
-load_dotenv()
+load_dotenv()  # this must run before you read os.getenv
 
-# Get DATABASE_URL from environment
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is required")
+    raise RuntimeError("DATABASE_URL is not set")
 
-print(f"Database URL: {DATABASE_URL}")
+# Clean, simple engine configuration
+async_engine = create_async_engine(
+    DATABASE_URL, 
+    echo=True,  # Keep for development debugging
+    future=True
+)
 
-# Create async engine for main operations
-async_engine = create_async_engine(DATABASE_URL, echo=True, future=True)
-
-# Create sync engine for table creation (initdb)
-sync_engine = create_engine(DATABASE_URL.replace("+asyncpg", ""), echo=True)
-
-# AsyncSession factory using async_sessionmaker
 AsyncSessionLocal = async_sessionmaker(
     bind=async_engine,
     class_=AsyncSession,
-    autocommit=False,
+    expire_on_commit=False,
     autoflush=False,
-    expire_on_commit=False
 )
 
 async def get_db():
     async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+        yield session
 
-async def read_tools(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Tool))
-    return result.scalars().all()
+async def initdb_async():
+    """
+    Create tables asynchronously. Call this on startup or from tests.
+    """
+    # Import models inside function to ensure mappings are registered
+    from . import models
+    async with async_engine.begin() as conn:
+        await conn.run_sync(models.Base.metadata.create_all)
 
-# Create tables in the Database (sync operation)
-def initdb():
-    from . import models  # Import models so they register with Base
-    print("Creating tables in database...")
-    Base.metadata.create_all(bind=sync_engine)
-    print("Tables created successfully!")
-
-# Import and expose commonly used components
-from .models import AIPlatform
-from . import crud
-from . import schemas
-
-# Automatically create tables if they don't exist
-initdb()
-
-if __name__ == "__main__":
-    print("Database initialization completed")
+__all__ = [
+    "DATABASE_URL",
+    "async_engine",
+    "AsyncSessionLocal", 
+    "get_db",
+    "initdb_async",
+]
