@@ -1,22 +1,23 @@
-
-
+# backend/app/main.py
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from .routes import platforms, tools, workflows
-from .database.models import Base
-from .database import engine
+from .routes import platforms  # add other routers if available
+from .database import initdb_async
 
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # create tables
+    await initdb_async()
+    yield
 
-app = FastAPI(title="AI Platform Recommender")
+app = FastAPI(title="AI Platform Recommender", lifespan=lifespan)
 
 @app.get("/")
-def read_root():
+async def read_root():
     return {"message": "AI Platform Recommender API is running"}
 
 @app.get("/ping")
-def ping():
+async def ping():
     return {"message": "You just got pinged"}
 
-app.include_router(platforms.router) #register platform
-app.include_router(tools.router) #register tool
-app.include_router(workflows.router) #register workflows
+app.include_router(platforms.router)

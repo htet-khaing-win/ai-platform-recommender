@@ -1,3 +1,3 @@
-from routes import platforms
+# from routes import platforms
 
-print(platforms.router)
+# print(platforms.router)

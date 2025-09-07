@@ -1,101 +1,74 @@
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+# backend/app/routes/platforms.py
 from typing import List
-from sqlalchemy.orm import Session
-from ..database import crud, schemas, SessionLocal, models
-from ..database.schemas import WorkflowStepResponse, WorkflowRequest, WorkflowResponse, ToolResponse
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..database import get_db, models, schemas, crud, AsyncSessionLocal, get_db
 
 router = APIRouter()
 
-class AIPlatform(BaseModel):
-    id: int
-    name: str
-    category: str
-    description: str
-    pricing: str
-    website: str
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 @router.post("/platforms", response_model=schemas.PlatformOut)
-def create_platform(platform: schemas.PlatformCreate, db: Session = Depends(get_db)):
-    return crud.create_platform(db, platform)
+async def create_platform(platform: schemas.PlatformCreate, db: AsyncSession = Depends(get_db)):
+    return await crud.create_platform(db, platform)
 
-@router.get("/platforms", response_model=list[schemas.PlatformOut])
-def read_platforms(db: Session = Depends(get_db)):
-    return crud.get_platforms(db)
+@router.get("/platforms", response_model=List[schemas.PlatformOut])
+async def read_platforms(db: AsyncSession = Depends(get_db)):
+    return await crud.get_platforms(db)
 
 @router.get("/platforms/{platform_id}", response_model=schemas.PlatformOut)
-def read_platform(platform_id: int, db: Session = Depends(get_db)):
-    db_platform = crud.get_platform_by_id(db, platform_id)
-    if db_platform is None:
-        raise HTTPException(status_code=404, detail="Something went wrong! Platform is not available")
-    return db_platform
+async def read_platform(platform_id: int, db: AsyncSession = Depends(get_db)):
+    obj = await crud.get_platform_by_id(db, platform_id)
+    if obj is None:
+        raise HTTPException(status_code=404, detail="Platform not found")
+    return obj
 
 @router.put("/platforms/{platform_id}", response_model=schemas.PlatformOut)
-def update_platform(platform_id: int, platform: schemas.PlatformUpdate, db: Session = Depends(get_db)):
-    updated_platform = crud.update_platform(db, platform_id, platform)
-    if updated_platform is None:
-        raise HTTPException(status_code=404, detail="Something went wrong! Platform is not available")
-    return updated_platform
+async def update_platform(platform_id: int, platform: schemas.PlatformUpdate, db: AsyncSession = Depends(get_db)):
+    updated = await crud.update_platform(db, platform_id, platform)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Platform not found")
+    return updated
 
 @router.delete("/platforms/{platform_id}", response_model=schemas.PlatformOut)
-def delete_platform(platform_id: int, db : Session = Depends(get_db)):
-    deleted_platform = crud.delete_platform(db,platform_id)
-    if deleted_platform is None:
-        raise HTTPException(status_code=404, detail="Something went wrong! Platform is not available")
-    return deleted_platform
+async def delete_platform(platform_id: int, db: AsyncSession = Depends(get_db)):
+    deleted = await crud.delete_platform(db, platform_id)
+    if deleted is None:
+        raise HTTPException(status_code=404, detail="Platform not found")
+    return deleted
 
-
-@router.post("/v1/workflow/generate", response_model=WorkflowResponse)
-def generate_workflow(request: WorkflowRequest, db: Session = Depends(get_db)): 
-
-#searching for the workflow
-    workflow = (
-        db.query(models.Workflow)
-        .filter(models.Workflow.trigger_keywords.like(f"%{request.goal}%"))
-        .first()
+@router.post("/v1/workflow/generate", response_model=schemas.WorkflowResponse)
+async def generate_workflow(request: schemas.WorkflowRequest, db: AsyncSession = Depends(get_db)):
+    # simple LIKE keyword match
+    result = await db.execute(
+        select(models.Workflow).where(models.Workflow.trigger_keywords.like(f"%{request.goal}%"))
     )
-
+    workflow = result.scalars().first()
     if not workflow:
         raise HTTPException(status_code=404, detail="Couldn't find the matching workflow")
-    
-    # Get ordered steps for the workfow
 
-    steps = (
-        db.query(models.WorkflowStep)
-        .filter(models.WorkflowStep.workflow_id == workflow.id)
+    result_steps = await db.execute(
+        select(models.WorkflowStep)
+        .options(selectinload(models.WorkflowStep.tool))
+        .where(models.WorkflowStep.workflow_id == workflow.id)
         .order_by(models.WorkflowStep.step_number)
-        .all()
     )
+    steps = result_steps.scalars().all()
 
-    # Building the Response
-
-    response = WorkflowResponse(
-        workflow_id = workflow.id,
-        name = workflow.name,
-        description= workflow.description,
-        steps = [
-            WorkflowStepResponse(
-                step_number = step.step_number,
-                action_description = step.action_description,
-                tool = ToolResponse(
-                    name = step.tool.name,
-                    description = step.tool.description,
-                    website = step.tool.website
+    return schemas.WorkflowResponse(
+        workflow_id=workflow.id,
+        name=workflow.name,
+        description=workflow.description,
+        steps=[
+            schemas.WorkflowStepResponse(
+                step_number=s.step_number,
+                action_description=s.action_description,
+                tool=schemas.ToolResponse(
+                    name=s.tool.name,
+                    description=s.tool.description,
+                    website=s.tool.website,
                 )
-            )
-            for step in steps
+            ) for s in steps
         ]
     )
-
-    return response
-
-
-    

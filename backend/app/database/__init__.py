@@ -1,59 +1,45 @@
-#database/__init__.py
-
+# backend/app/database/__init__.py
 import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
-from .models import Base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
-# Use absolute path - place database in the project root  
-# Navigate from database/__init__.py to project root
-current_file = os.path.abspath(__file__)
-database_dir = os.path.dirname(current_file)  # .../backend/app/database
-app_dir = os.path.dirname(database_dir)       # .../backend/app  
-backend_dir = os.path.dirname(app_dir)        # .../backend
-project_root = os.path.dirname(backend_dir)   # .../ai-platform-recommender
-
-DATABASE_PATH = os.path.join(project_root, "ai_platforms.db")
-# DATABASE_URL = f"sqlite:///{DATABASE_PATH}"  Old (SQLite)
-
-
-load_dotenv()  # Load environment variables from .env
+load_dotenv()  # this must run before you read os.getenv
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is required")
+    raise RuntimeError("DATABASE_URL is not set")
 
-print(f"Database location: {DATABASE_PATH}")
+# Clean, simple engine configuration
+async_engine = create_async_engine(
+    DATABASE_URL, 
+    echo=True,  # Keep for development debugging
+    future=True
+)
 
-# Create engine
-engine = create_engine(DATABASE_URL)  # ✅ Clean PostgreSQL connection
-# engine = create_engine(
-#     DATABASE_URL, connect_args={"check_same_thread": False}
-# )
+AsyncSessionLocal = async_sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False,
+)
 
-# SessionLocal class for DB sessions
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session
 
-# defining Base
-# Base = declarative_base()
+async def initdb_async():
+    """
+    Create tables asynchronously. Call this on startup or from tests.
+    """
+    # Import models inside function to ensure mappings are registered
+    from . import models
+    async with async_engine.begin() as conn:
+        await conn.run_sync(models.Base.metadata.create_all)
 
-
-# Create tables in the Database
-def initdb():
-    from . import models  # Import models so they register with Base
-    print(f"Creating tables in: {DATABASE_PATH}")
-    Base.metadata.create_all(bind=engine)
-    print("Tables created successfully!")
-
-# Import and expose commonly used components
-from .models import AIPlatform
-from . import crud
-from . import schemas
-
-# Automatically create tables if they don't exist
-# This ensures tables are always available when the module is imported
-initdb()
-
-if __name__ == "__main__":
-    print("Database tables created successfully")
+__all__ = [
+    "DATABASE_URL",
+    "async_engine",
+    "AsyncSessionLocal", 
+    "get_db",
+    "initdb_async",
+]

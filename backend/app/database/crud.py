@@ -1,105 +1,107 @@
-from sqlalchemy.orm import Session
+# backend/app/database/crud.py
+from typing import Optional, List
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from . import models, schemas
 
-def create_platform(db: Session, platform: schemas.PlatformCreate):
-    db_platform = models.AIPlatform(**platform.dict())
-    db.add(db_platform)
-    db.commit()
-    db.refresh(db_platform)
-    return db_platform
+# -------- AIPlatform --------
 
-def get_platforms(db: Session):
-    return db.query(models.AIPlatform).all()
+async def create_platform(db: AsyncSession, platform: schemas.PlatformCreate) -> models.AIPlatform:
+    obj = models.AIPlatform(**platform.dict())
+    db.add(obj)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
 
-def get_platform_by_id(db: Session, platform_id: int):
-    return db.query(models.AIPlatform).filter(models.AIPlatform.id == platform_id).first()
+async def get_platforms(db: AsyncSession) -> List[models.AIPlatform]:
+    result = await db.execute(select(models.AIPlatform))
+    return result.scalars().all()
 
-def update_platform(db: Session, platform_id: int, platform: schemas.PlatformUpdate):
-    db_platform = db.query(models.AIPlatform).filter(models.AIPlatform.id == platform_id).first()
-    if db_platform:
-        # Update all fields in the loop
-        for key, value in platform.dict(exclude_unset=True).items():
-            setattr(db_platform, key, value)
-        
-        # OUTSIDE the loop: commit, refresh, and return
-        db.commit()
-        db.refresh(db_platform)
-        return db_platform
-    
-    return None
+async def get_platform_by_id(db: AsyncSession, platform_id: int) -> Optional[models.AIPlatform]:
+    return await db.get(models.AIPlatform, platform_id)
 
-def delete_platform(db: Session, platform_id: int):
-    db_platform = db.query(models.AIPlatform).filter(models.AIPlatform.id == platform_id).first()
-    if db_platform:
-        db.delete(db_platform)
-        db.commit()
-    return db_platform
-
-#------------Tool---------------------
-
-def create_tool(db: Session, tool:schemas.ToolCreate):
-    db_tool = models.Tool(**tool.dict())
-    db.add(db_tool)
-    db.commit()
-    db.refresh(db_tool)
-    return db_tool
-
-def get_tool(db: Session, tool_id: int):  #Specific Tools
-    return db.query(models.Tool).filter(models.Tool.id == tool_id).first()
-
-def get_tools(db: Session, skip: int = 0, limit: int = 100):  # All tools
-    return db.query(models.Tool).offset(skip).limit(limit).all()
-
-def update_tool(db: Session, tool_id: int, tool: schemas.ToolUpdate): # Tool Update
-    db_tool = db.query(models.Tool).filter(models.Tool.id == tool_id).first()
-    if not db_tool:
+async def update_platform(db: AsyncSession, platform_id: int, platform: schemas.PlatformUpdate) -> Optional[models.AIPlatform]:
+    obj = await db.get(models.AIPlatform, platform_id)
+    if obj is None:
         return None
-    for key, value in tool.dict(exclude_unset= True).items():
-        setattr(db_tool, key,value)
-    db.commit()
-    db.refresh(db_tool)
-    return db_tool
+    for k, v in platform.dict(exclude_unset=True).items():
+        setattr(obj, k, v)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
 
-def delete_tool(db: Session, tool_id: int): # Tool Delete
-    db_tool = db.query(models.Tool).filter(models.Tool.id == tool_id).first()
-    if not db_tool:
+async def delete_platform(db: AsyncSession, platform_id: int) -> Optional[models.AIPlatform]:
+    obj = await db.get(models.AIPlatform, platform_id)
+    if obj is None:
         return None
-    db.delete(db_tool)
-    db.commit()
-    return db_tool
+    await db.delete(obj)
+    await db.commit()
+    return obj
 
-#---------WorkFlow--------------------
+# -------- Tools --------
 
-def create_workflow(db: Session, workflow: schemas.WorkflowCreate):
-    db_workflow = models.Workflow(**workflow.dict())
-    db.add(db_workflow)
-    db.commit()
-    db.refresh(db_workflow)
-    return db_workflow
+async def create_tool(db: AsyncSession, tool: schemas.ToolCreate) -> models.Tool:
+    obj = models.Tool(**tool.dict())
+    db.add(obj)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
 
-def get_workflow(db: Session, workflow_id: int):
-    return db.query(models.Workflow).filter(models.Workflow.id == workflow_id).first()
+async def get_tool(db: AsyncSession, tool_id: int) -> Optional[models.Tool]:
+    return await db.get(models.Tool, tool_id)
 
-def get_workflows(db: Session, skip: int=0, limit: int= 10):
-    return db.query(models.Workflow).offset(skip).limit(limit).all()
+async def get_tools(db: AsyncSession, skip: int = 0, limit: int = 100):
+    result = await db.execute(select(models.Tool).offset(skip).limit(limit))
+    return result.scalars().all()
 
-def update_workflow(db: Session, workflow_id: int, workflow: schemas.WorkflowUpdate):
-    db_workflow = db.query(models.Workflow).filter(models.Workflow.id == workflow_id).first()
-    if not db_workflow:
+async def update_tool(db: AsyncSession, tool_id: int, tool: schemas.ToolUpdate):
+    obj = await db.get(models.Tool, tool_id)
+    if obj is None:
         return None
-    
-    for key, value in workflow.dict(exclude_unset=True).items():
-        setattr(db_workflow, key, value)
-    
-    db.commit()
-    db.refresh(db_workflow)
-    return db_workflow
+    for k, v in tool.dict(exclude_unset=True).items():
+        setattr(obj, k, v)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
 
-def delete_workflow(db: Session, workflow_id: int):
-    
-    db_workflow = db.query(models.Workflow).filter(models.Workflow.id == workflow_id).first()
-    if not db_workflow:
+async def delete_tool(db: AsyncSession, tool_id: int):
+    obj = await db.get(models.Tool, tool_id)
+    if obj is None:
         return None
-    db.delete(db_workflow)
-    db.commit()
-    return db_workflow
+    await db.delete(obj)
+    await db.commit()
+    return obj
+
+# -------- Workflows --------
+
+async def create_workflow(db: AsyncSession, workflow: schemas.WorkflowCreate) -> models.Workflow:
+    obj = models.Workflow(**workflow.dict())
+    db.add(obj)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
+
+async def get_workflow(db: AsyncSession, workflow_id: int):
+    return await db.get(models.Workflow, workflow_id)
+
+async def get_workflows(db: AsyncSession, skip: int = 0, limit: int = 10):
+    result = await db.execute(select(models.Workflow).offset(skip).limit(limit))
+    return result.scalars().all()
+
+async def update_workflow(db: AsyncSession, workflow_id: int, workflow: schemas.WorkflowUpdate):
+    obj = await db.get(models.Workflow, workflow_id)
+    if obj is None:
+        return None
+    for k, v in workflow.dict(exclude_unset=True).items():
+        setattr(obj, k, v)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
+
+async def delete_workflow(db: AsyncSession, workflow_id: int):
+    obj = await db.get(models.Workflow, workflow_id)
+    if obj is None:
+        return None
+    await db.delete(obj)
+    await db.commit()
+    return obj

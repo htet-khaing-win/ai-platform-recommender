@@ -1,7 +1,8 @@
 #database/models.py
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.sql import func
 
 Base = declarative_base() #Created Base to use everywhere
 
@@ -29,25 +30,53 @@ class Tool(Base):
 
     workflow_steps = relationship("WorkflowStep", back_populates="tool")
 
-class Workflow(Base):
+    #Metadata fields
 
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    #Constraints
+
+    __table_args__ = (
+        CheckConstraint("char_length(name) > 2", name="check_tool_name_length"),  #at least 3 char
+    )
+
+class Workflow(Base):
     __tablename__ = "workflows"
 
-    id = Column(Integer, primary_key= True, index= True)
-    name = Column(String(100), unique= True, nullable= False)
-    description = Column(Text, nullable= False)
-    trigger_keywords = Column(Text, nullable= False)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False)
+    description = Column(Text, nullable=False)
+    trigger_keywords = Column(Text, nullable=False)
     
     steps = relationship("WorkflowStep", back_populates="workflow")
+
+    # Metadata fields
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint("char_length(description) > 10", name="check_workflow_description_length"),
+    )
 
 class WorkflowStep(Base):
     __tablename__ = "workflow_steps"
 
-    id = Column(Integer, primary_key= True, index= True)
-    workflow_id = Column(Integer, ForeignKey("workflows.id"), nullable= False)
-    step_number = Column(Integer, nullable = False)
-    tool_id = Column(Integer, ForeignKey("tools.id"), nullable= False)
-    action_description = Column(Text, nullable= False)
+    id = Column(Integer, primary_key=True, index=True)
+    workflow_id = Column(Integer, ForeignKey("workflows.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    step_number = Column(Integer, nullable=False)
+    tool_id = Column(Integer, ForeignKey("tools.id", ondelete="SET NULL"), nullable=False)
+    action_description = Column(Text, nullable=False)
 
     workflow = relationship("Workflow", back_populates="steps")
-    tool = relationship("Tool", back_populates= "workflow_steps")
+    tool = relationship("Tool", back_populates="workflow_steps")
+
+    # Metadata fields
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint("step_number > 0", name="check_step_number_positive"),
+    )
