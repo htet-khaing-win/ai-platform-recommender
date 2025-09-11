@@ -1,5 +1,20 @@
-# ai-platform-recommender
-This is my personal project to help people who want to invest more into the world of AI and find hidden gems that are not mainstream.
+# AI Platform Recommender
+
+A FastAPI-based project that recommends workflows and tools for user goals.
+
+## Features
+- PostgreSQL database with Alembic migrations
+- Async SQLAlchemy support
+- CRUD API with FastAPI
+- Pre-commit hooks for code quality
+- Git Flow branching strategy
+
+## Setup
+
+git clone https://github.com/yourusername/ai-platform-recommender.git
+cd ai-platform-recommender
+pip install -r requirements.txt
+uvicorn backend.app.main:app --reload
 
 
 ## Progress A – PostgreSQL Migration
