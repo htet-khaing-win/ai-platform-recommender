@@ -11,10 +11,10 @@ A FastAPI-based project that recommends workflows and tools for user goals.
 
 ## Setup
 
-git clone https://github.com/yourusername/ai-platform-recommender.git
-cd ai-platform-recommender
-pip install -r requirements.txt
-uvicorn backend.app.main:app --reload
+- git clone https://github.com/yourusername/ai-platform-recommender.git
+- cd ai-platform-recommender
+- pip install -r requirements.txt
+- uvicorn backend.app.main:app --reload
 
 
 ## Progress A – PostgreSQL Migration
